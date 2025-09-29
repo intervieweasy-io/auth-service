@@ -2,10 +2,10 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { cfg } from "./config";
-import { connectDb } from "./db";
-import authRoutes from "./routes/auth";
-import { authLimiter } from "./middleware/rateLimit";
+import { cfg } from "./config.js";
+import { connectDb } from "./db.js";
+import authRoutes from "./routes/auth.js";
+import { authLimiter } from "./middleware/rateLimit.js";
 
 const app = express();
 app.use(helmet());
