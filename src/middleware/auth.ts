@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import createError from "http-errors";
-import { verifyAccess } from "../utils/jwt";
+import { verifyAccess } from "../utils/jwt.js";
 
 export const requireAuth =
   (roles?: string[]) =>
