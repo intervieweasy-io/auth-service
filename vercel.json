@@ -1,0 +1,15 @@
+{
+    "redirects": [
+        {
+            "source": "/:path*",
+            "destination": "https://api.intervieweasy.io/:path*",
+            "permanent": true,
+            "has": [
+                {
+                    "type": "host",
+                    "value": ":sub.vercel.app"
+                }
+            ]
+        }
+    ]
+}
