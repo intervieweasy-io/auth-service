@@ -21,7 +21,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["https://intervieweasy.io",  "http://127.0.0.1:3000", "https://karyo.intervieweasy.io"], 
+    origin: ["https://intervieweasy.io", "https://karyo.intervieweasy.io", /http:\/\/127\.0\.0\.1:300\d/ ], 
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
