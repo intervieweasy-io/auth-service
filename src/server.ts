@@ -17,9 +17,16 @@ const helmet =
 
 const app = express();
 app.use(helmet());
-app.use(cors({ origin: cfg.corsOrigin, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: ["https://intervieweasy.io"], 
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 app.use("/api/auth", authLimiter, authRoutes);
 app.get("/api/health", (_, res) => res.json({ ok: true }));
 
