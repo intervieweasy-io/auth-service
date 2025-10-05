@@ -1,0 +1,40 @@
+import { Schema, model, Types } from "mongoose";
+
+export type AuditAction =
+  | "CREATE"
+  | "UPDATE"
+  | "MOVE_STAGE"
+  | "ARCHIVE"
+  | "RESTORE"
+  | "COMMENT";
+
+export interface IJobAudit {
+  _id: Types.ObjectId;
+  jobId: Types.ObjectId;
+  userId: string;
+  action: AuditAction;
+  fromStage?: string;
+  toStage?: string;
+  meta?: Record<string, unknown>;
+  createdAt: Date;
+}
+
+const JobAuditSchema = new Schema<IJobAudit>(
+  {
+    jobId: { type: Schema.Types.ObjectId, index: true, required: true },
+    userId: { type: String, required: true },
+    action: {
+      type: String,
+      enum: ["CREATE", "UPDATE", "MOVE_STAGE", "ARCHIVE", "RESTORE", "COMMENT"],
+      required: true,
+    },
+    fromStage: { type: String },
+    toStage: { type: String },
+    meta: { type: Object },
+  },
+  { timestamps: { createdAt: true, updatedAt: false } }
+);
+
+JobAuditSchema.index({ jobId: 1, createdAt: -1 });
+
+export const JobAudit = model<IJobAudit>("JobAudit", JobAuditSchema);
