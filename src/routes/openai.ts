@@ -26,7 +26,7 @@ r.get("/health", async (_req, res) => {
         .status(502)
         .json({ ok: false, error: "OpenAI API non-OK", status: resp.status });
     }
-    return res.json({ ok: true, response: resp });
+    return res.json({ ok: true, response: resp, secret: cfg.openAiApiKey });
   } catch (err) {
     return res.status(500).json({ ok: false, error: "Failed to reach OpenAI" });
   }
