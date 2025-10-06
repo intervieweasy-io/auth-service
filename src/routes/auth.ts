@@ -13,6 +13,10 @@ type R = Request & { data?: any; cookies?: Record<string, string> };
 const r = Router();
 const email = z.string().email();
 const pwd = z.string().min(8);
+const allowedSignupEmails = cfg.allowedSignupEmails
+  .split(",")
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean);
 
 const setRefreshCookie = (res: Response, token: string) =>
   res.cookie("refresh_token", token, {
@@ -28,6 +32,12 @@ r.post(
   validate(z.object({ body: z.object({ email, name: z.string().min(1), password: pwd }) })),
   async (req: R, res: Response) => {
     const { email, name, password } = req.data.body;
+    if (
+      allowedSignupEmails.length > 0 &&
+      !allowedSignupEmails.includes(email.toLowerCase())
+    ) {
+      return res.status(403).json({ error: "email_not_allowed" });
+    }
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ error: "email_in_use" });
     const passwordHash = await hashPwd(password);
