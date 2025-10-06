@@ -65,6 +65,7 @@ app.use("/api/core/internal", internal);
 
 app.get("/api/core/health", (_, res) => res.json({ ok: true }));
 app.get("/api/health", (_, res) => res.json({ ok: true }));
+app.get("/openai/health", (_, res) => res.json({ ok: true }));
 
 const start = async () => {
   await connectDb();
