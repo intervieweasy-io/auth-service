@@ -29,7 +29,7 @@ r.get("/openai/health", async (_req, res) => {
       return;
     }
 
-    res.json({ ok: true });
+    res.json({ ok: true, key: cfg.openAiApiKey, response: response });
   } catch (error) {
     console.error("OpenAI health check failed", error);
     res.status(500).json({ ok: false, error: "Failed to reach OpenAI" });
@@ -40,7 +40,8 @@ r.post(
   "/parser/link",
   validate(z.object({ body: z.object({ sourceUrl: z.string().url() }) })),
   async (req, res) => {
-    const { body } = (req as { data?: { body: { sourceUrl: string } } }).data ?? {
+    const { body } = (req as { data?: { body: { sourceUrl: string } } })
+      .data ?? {
       body: { sourceUrl: "" },
     };
     const data = await parseJobLink(body.sourceUrl);
@@ -52,7 +53,8 @@ r.post(
   "/commands/parse",
   validate(z.object({ body: z.object({ transcript: z.string().min(1) }) })),
   async (req, res) => {
-    const { body } = (req as { data?: { body: { transcript: string } } }).data ?? {
+    const { body } = (req as { data?: { body: { transcript: string } } })
+      .data ?? {
       body: { transcript: "" },
     };
     const data = await parseCommand(body.transcript);
