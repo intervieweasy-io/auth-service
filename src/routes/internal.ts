@@ -29,7 +29,7 @@ r.get("/openai/health", async (_req, res) => {
       return;
     }
 
-    res.json({ ok: "fuck" });
+    res.json({ ok: true });
   } catch (error) {
     console.error("OpenAI health check failed", error);
     res.status(500).json({ ok: false, error: "Failed to reach OpenAI" });
