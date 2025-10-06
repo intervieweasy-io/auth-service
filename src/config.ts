@@ -13,6 +13,7 @@ export const cfg = {
   appUrl: process.env.APP_URL || "",
   emailFrom: process.env.EMAIL_FROM || "no-reply@example.com",
   allowedOrigins: process.env.ALLOWED_ORIGINS || "",
+  allowedSignupEmails: process.env.ALLOWED_SIGNUP_EMAILS || "",
   openAiApiKey: process.env.OPENAI_API_KEY || "",
   openAiModel: process.env.OPENAI_MODEL || "gpt-4o-mini"
 };
