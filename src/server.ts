@@ -15,18 +15,16 @@ import comments from "./routes/comments.js";
 import audit from "./routes/audit.js";
 import commands from "./routes/commands.js";
 import internal from "./routes/internal.js";
+import openai from "./routes/openai.js";
 
 const helmet =
   typeof helmetModule === "function"
     ? (helmetModule as HelmetFactory)
     : (helmetModule as { default: HelmetFactory }).default;
 
-type RateLimitFactory = typeof rateLimitModule extends {
-  default: infer T;
-}
+type RateLimitFactory = typeof rateLimitModule extends { default: infer T }
   ? T
   : typeof rateLimitModule;
-
 const rateLimit =
   typeof rateLimitModule === "function"
     ? (rateLimitModule as RateLimitFactory)
@@ -57,15 +55,17 @@ app.use((req, _res, next) => {
 app.use(rateLimit({ windowMs: 60_000, limit: 300 }));
 
 app.use("/api/auth", authLimiter, authRoutes);
+
 app.use("/api/core/jobs", jobs);
-app.use("/api/core/jobs", comments);
-app.use("/api/core/jobs", audit);
+app.use("/api/core/jobs/:jobId/comments", comments);
+app.use("/api/core/jobs/:jobId/audit", audit);
 app.use("/api/core/commands", commands);
 app.use("/api/core/internal", internal);
 
-app.get("/api/core/health", (_, res) => res.json({ ok: true }));
-app.get("/api/health", (_, res) => res.json({ ok: true }));
-app.get("/openai/health", (_, res) => res.json({ ok: true }));
+app.use("/openai", openai);
+
+app.get("/api/core/health", (_req, res) => res.json({ ok: true }));
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 const start = async () => {
   await connectDb();
