@@ -28,6 +28,7 @@ r.post(
       .data ?? {
       body: { transcript: "" },
     };
+
     const data = await parseCommand(body.transcript);
     res.json(data);
   }
