@@ -21,7 +21,11 @@ const bodySchema = z.object({
 r.post("/", requireAuth(), validate(bodySchema), async (req, res) => {
   const ar = req as AuthedRequest & {
     data?: {
-      body: { channel: "voice" | "text"; transcript: string; requestId: string };
+      body: {
+        channel: "voice" | "text";
+        transcript: string;
+        requestId: string;
+      };
     };
   };
   const { body } = (req as typeof ar).data!;
@@ -39,6 +43,7 @@ r.post("/", requireAuth(), validate(bodySchema), async (req, res) => {
   }
 
   const parsed = await parseCommand(transcript);
+  console.log(parsed);
   const intent = parsed?.intent as string | undefined;
   const args = (parsed?.args || {}) as Record<string, unknown>;
 
@@ -55,16 +60,16 @@ r.post("/", requireAuth(), validate(bodySchema), async (req, res) => {
     const stage = args.stage as string | undefined;
     const query: Record<string, unknown> = { userId: ar.userId };
     const company = args.company as string | undefined;
-    const title = args.title as string | undefined;
+    const title = args.position as string | undefined;
     if (company) query.company = new RegExp(`^${company}$`, "i");
-    if (title) query.title = new RegExp(`^${title}$`, "i");
+    if (title) query.position = new RegExp(`^${title}$`, "i");
     const matches = await Job.find(query).limit(5);
 
     if (matches.length !== 1 || !stage) {
       const options = matches.map((j) => ({
         jobId: String(j._id),
         company: j.company,
-        title: j.title,
+        title: j.position,
       }));
       return res.json({
         status: "NEED_CLARIFICATION",
@@ -94,16 +99,16 @@ r.post("/", requireAuth(), validate(bodySchema), async (req, res) => {
   if (intent === "COMMENT") {
     const query: Record<string, unknown> = { userId: ar.userId };
     const company = args.company as string | undefined;
-    const title = args.title as string | undefined;
+    const title = args.position as string | undefined;
     if (company) query.company = new RegExp(`^${company}$`, "i");
-    if (title) query.title = new RegExp(`^${title}$`, "i");
+    if (title) query.position = new RegExp(`^${title}$`, "i");
     const matches = await Job.find(query).limit(5);
 
     if (matches.length !== 1) {
       const options = matches.map((j) => ({
         jobId: String(j._id),
         company: j.company,
-        title: j.title,
+        title: j.position,
       }));
       return res.json({
         status: "NEED_CLARIFICATION",
@@ -130,7 +135,11 @@ r.post("/", requireAuth(), validate(bodySchema), async (req, res) => {
     return res.json({
       status: "APPLIED",
       effects: [
-        { type: "COMMENT", jobId: String(comment.jobId), commentId: String(comment._id) },
+        {
+          type: "COMMENT",
+          jobId: String(comment.jobId),
+          commentId: String(comment._id),
+        },
       ],
     });
   }
@@ -138,7 +147,7 @@ r.post("/", requireAuth(), validate(bodySchema), async (req, res) => {
   if (intent === "CREATE") {
     const doc = await Job.create({
       userId: ar.userId!,
-      title: (args.title as string | undefined) || "Untitled",
+      title: (args.position as string | undefined) || "Untitled",
       company: (args.company as string | undefined) || "Unknown",
       location: (args.location as string | undefined) || "",
       stage: (args.stage as string | undefined) || "WISHLIST",

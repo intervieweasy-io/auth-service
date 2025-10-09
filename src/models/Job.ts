@@ -1,16 +1,12 @@
 import { Schema, model, Types } from "mongoose";
 
-export type Stage =
-  | "WISHLIST"
-  | "APPLIED"
-  | "INTERVIEW"
-  | "OFFER"
-  | "ARCHIVED";
+export type Stage = "WISHLIST" | "APPLIED" | "INTERVIEW" | "OFFER" | "ARCHIVED";
 
 export interface IJob {
   _id: Types.ObjectId;
   userId: string;
   title: string;
+  position?: string;
   company: string;
   location?: string;
   sourceUrl?: string;
