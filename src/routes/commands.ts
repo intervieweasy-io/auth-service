@@ -29,6 +29,13 @@ const bodySchema = z.object({
 /* =========================
    Pending Clarification Model
    ========================= */
+type PendingOption = {
+  jobId: string;
+  company: string;
+  title?: string;
+  stage?: string;
+};
+
 type PendingDoc = {
   userId: mongoose.Types.ObjectId;
   intent:
@@ -39,14 +46,19 @@ type PendingDoc = {
     | "ARCHIVE"
     | "RESTORE";
   args: Record<string, unknown>;
-  options: Array<{
-    jobId: string;
-    company: string;
-    title?: string;
-    stage?: string;
-  }>;
+  options: PendingOption[];
   createdAt: Date;
 };
+
+const PendingOptionSchema = new Schema<PendingOption>(
+  {
+    jobId: { type: String, required: true },
+    company: { type: String, required: true },
+    title: { type: String },
+    stage: { type: String },
+  },
+  { _id: false } // no subdocument _id
+);
 
 const PendingClarificationSchema = new Schema<PendingDoc>(
   {
@@ -57,16 +69,15 @@ const PendingClarificationSchema = new Schema<PendingDoc>(
       unique: true,
     },
     intent: { type: String, required: true },
-    args: { type: Schema.Types.Mixed, default: {} },
-    options: { type: [Schema.Types.Mixed], default: [] },
+    args: { type: Schema.Types.Mixed, default: () => ({}) },
+    options: { type: [PendingOptionSchema], default: () => [] },
     createdAt: { type: Date, default: Date.now },
   },
   { collection: "pending_clarifications" }
 );
 
 const PendingClarification =
-  (mongoose.models &&
-    (mongoose.models.PendingClarification as mongoose.Model<PendingDoc>)) ||
+  (mongoose.models?.PendingClarification as mongoose.Model<PendingDoc>) ||
   mongoose.model<PendingDoc>(
     "PendingClarification",
     PendingClarificationSchema
