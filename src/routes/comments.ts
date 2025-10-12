@@ -18,7 +18,9 @@ r.post(
     const job = await Job.findOne({ _id: req.params.id, userId: ar.userId });
     if (!job) return res.status(404).json({ error: "not_found" });
 
-    const { body } = (req as { data?: { body: { text: string } } }).data ?? { body: { text: "" } };
+    const { body } = (req as { data?: { body: { text: string } } }).data ?? {
+      body: { text: "" },
+    };
     const comment = await JobComment.create({
       jobId: job._id,
       userId: ar.userId!,
@@ -43,11 +45,15 @@ r.get(
     })
   ),
   async (req, res) => {
-    const ar = req as AuthedRequest & { data?: { query: { limit?: number; cursor?: string } } };
+    const ar = req as AuthedRequest & {
+      data?: { query: { limit?: number; cursor?: string } };
+    };
     const job = await Job.findOne({ _id: req.params.id, userId: ar.userId });
     if (!job) return res.status(404).json({ error: "not_found" });
 
-    const { query } = (req as { data?: { query: { limit?: number; cursor?: string } } }).data ?? { query: {} };
+    const { query } = (
+      req as { data?: { query: { limit?: number; cursor?: string } } }
+    ).data ?? { query: {} };
     const { limit = 20, cursor } = query;
 
     const filter: Record<string, unknown> = { jobId: job._id };

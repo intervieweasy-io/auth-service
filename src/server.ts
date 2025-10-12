@@ -25,6 +25,7 @@ const helmet =
 type RateLimitFactory = typeof rateLimitModule extends { default: infer T }
   ? T
   : typeof rateLimitModule;
+
 const rateLimit =
   typeof rateLimitModule === "function"
     ? (rateLimitModule as RateLimitFactory)
@@ -57,8 +58,8 @@ app.use(rateLimit({ windowMs: 60_000, limit: 300 }));
 app.use("/api/auth", authLimiter, authRoutes);
 
 app.use("/api/core/jobs", jobs);
-app.use("/api/core/jobs/:jobId/comments", comments);
-app.use("/api/core/jobs/:jobId/audit", audit);
+app.use("/api/core/jobs", comments); // -> /api/core/jobs/:id/comments
+app.use("/api/core/jobs", audit); // -> /api/core/jobs/:id/audit
 app.use("/api/core/commands", commands);
 app.use("/api/core/internal", internal);
 
