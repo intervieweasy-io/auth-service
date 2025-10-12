@@ -4,6 +4,7 @@ import { requireAuth, AuthedRequest } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { CommandDedup } from "../models/CommandDedup.js";
 import { Job } from "../models/Job.js";
+import { User } from "../models/User.js";
 import { JobComment } from "../models/JobComment.js";
 import { writeAudit } from "../services/auditHook.js";
 import { parseCommand } from "../services/commandParser.js";
@@ -364,9 +365,12 @@ r.post("/", requireAuth(), validate(bodySchema), async (req, res) => {
       const text =
         ((pending.args && (pending.args as any).text) as string) || transcript;
 
+      const user = await User.findById(ar.userId);
       const comment = await JobComment.create({
         jobId: job._id,
         userId: ar.userId!,
+        userEmail: user?.email,
+        userName: user?.name,
         text,
       });
       await Job.updateOne({ _id: job._id }, { $inc: { notesCount: 1 } });
@@ -532,9 +536,12 @@ r.post("/", requireAuth(), validate(bodySchema), async (req, res) => {
 
     if (confident) {
       const job = top.j;
+      const user = await User.findById(ar.userId);
       const comment = await JobComment.create({
         jobId: job._id,
         userId: ar.userId!,
+        userEmail: user?.email,
+        userName: user?.name,
         text,
       });
       await Job.updateOne({ _id: job._id }, { $inc: { notesCount: 1 } });
