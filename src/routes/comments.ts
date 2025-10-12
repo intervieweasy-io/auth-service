@@ -4,6 +4,7 @@ import { requireAuth, AuthedRequest } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { Job } from "../models/Job.js";
 import { JobComment } from "../models/JobComment.js";
+import { User } from "../models/User.js";
 import { writeAudit } from "../services/auditHook.js";
 import { encodeCursor, decodeCursor } from "../utils/cursor.js";
 
@@ -21,9 +22,12 @@ r.post(
     const { body } = (req as { data?: { body: { text: string } } }).data ?? {
       body: { text: "" },
     };
+    const user = await User.findById(ar.userId);
     const comment = await JobComment.create({
       jobId: job._id,
       userId: ar.userId!,
+      userEmail: user?.email,
+      userName: user?.name,
       text: body.text,
     });
     await Job.updateOne({ _id: job._id }, { $inc: { notesCount: 1 } });
