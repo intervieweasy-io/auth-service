@@ -65,8 +65,8 @@ r.post(
     const roles = Array.isArray(user.roles) ? [...user.roles].map(String) : [];
     const access = await signAccess({ sub: String(user._id), roles });
     const refresh = await signRefresh({ sub: String(user._id), ver: Date.now() });
-    user.refreshHash = await hashPwd(refresh);
-    await user.save();
+    const refreshHash = await hashPwd(refresh);
+    await User.updateOne({ _id: user._id }, { refreshHash });
     setRefreshCookie(res, refresh);
     res.json({ access });
   }
@@ -84,8 +84,8 @@ r.post(
     const roles = Array.isArray(user.roles) ? [...user.roles].map(String) : [];
     const access = await signAccess({ sub: String(user._id), roles });
     const refresh = await signRefresh({ sub: String(user._id), ver: Date.now() });
-    user.refreshHash = await hashPwd(refresh);
-    await user.save();
+    const refreshHash = await hashPwd(refresh);
+    await User.updateOne({ _id: user._id }, { refreshHash });
     setRefreshCookie(res, refresh);
     res.json({ access });
   }
@@ -103,8 +103,8 @@ r.post("/refresh", async (req: R, res: Response) => {
     const roles = Array.isArray(user.roles) ? [...user.roles].map(String) : [];
     const access = await signAccess({ sub: String(user._id), roles });
     const nextRefresh = await signRefresh({ sub: String(user._id), ver: Date.now() });
-    user.refreshHash = await hashPwd(nextRefresh);
-    await user.save();
+    const nextRefreshHash = await hashPwd(nextRefresh);
+    await User.updateOne({ _id: user._id }, { refreshHash: nextRefreshHash });
     setRefreshCookie(res, nextRefresh);
     res.json({ access });
   } catch {
@@ -119,8 +119,7 @@ r.post("/logout", async (req: R, res: Response) => {
       const { payload } = await verifyRefresh(token);
       const user = await User.findById(payload.sub as string);
       if (user) {
-        user.refreshHash = undefined;
-        await user.save();
+        await User.updateOne({ _id: user._id }, { $unset: { refreshHash: 1 } });
       }
     } catch {}
   }
