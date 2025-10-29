@@ -16,6 +16,12 @@ import audit from "./routes/audit.js";
 import commands from "./routes/commands.js";
 import internal from "./routes/internal.js";
 import openai from "./routes/openai.js";
+import profile from "./routes/profile.js";
+import posts from "./routes/posts.js";
+import engage from "./routes/engage.js";
+import feed from "./routes/feed.js";
+import graph from "./routes/graph.js";
+import pods from "./routes/pods.js";
 
 const helmet =
   typeof helmetModule === "function"
@@ -62,6 +68,12 @@ app.use("/api/core/jobs", comments); // -> /api/core/jobs/:id/comments
 app.use("/api/core/jobs", audit); // -> /api/core/jobs/:id/audit
 app.use("/api/core/commands", commands);
 app.use("/api/core/internal", internal);
+app.use("/api/profile", profile);
+app.use("/api/posts", posts);
+app.use("/api/engage", engage);
+app.use("/api/feed", feed);
+app.use("/api/graph", graph);
+app.use("/api/pods", pods);
 
 app.use("/openai", openai);
 

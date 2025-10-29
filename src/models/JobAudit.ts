@@ -19,7 +19,6 @@ export interface IJobAudit {
   toStage?: string;
   meta?: Record<string, unknown>;
   createdAt: Date;
-  message?: string;
 }
 
 const JobAuditSchema = new Schema<IJobAudit>(

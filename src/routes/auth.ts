@@ -29,9 +29,22 @@ const setRefreshCookie = (res: Response, token: string) =>
 
 r.post(
   "/signup",
-  validate(z.object({ body: z.object({ email, name: z.string().min(1), password: pwd }) })),
+  validate(
+    z.object({
+      body: z.object({
+        email,
+        name: z.string().min(1),
+        handle: z
+          .string()
+          .min(3)
+          .max(32)
+          .regex(/^[a-z0-9_]+$/i),
+        password: pwd,
+      }),
+    })
+  ),
   async (req: R, res: Response) => {
-    const { email, name, password } = req.data.body;
+    const { email, name, handle, password } = req.data.body;
     if (
       allowedSignupEmails.length > 0 &&
       !allowedSignupEmails.includes(email.toLowerCase())
@@ -40,8 +53,15 @@ r.post(
     }
     const exists = await User.findOne({ email });
     if (exists) return res.status(409).json({ error: "email_in_use" });
+    const handleExists = await User.findOne({ handle: handle.toLowerCase() });
+    if (handleExists) return res.status(409).json({ error: "handle_in_use" });
     const passwordHash = await hashPwd(password);
-    const user = await User.create({ email, name, password: passwordHash });
+    const user = await User.create({
+      email,
+      name,
+      handle: handle.toLowerCase(),
+      password: passwordHash,
+    });
     const roles = Array.isArray(user.roles) ? [...user.roles].map(String) : [];
     const access = await signAccess({ sub: String(user._id), roles });
     const refresh = await signRefresh({ sub: String(user._id), ver: Date.now() });
