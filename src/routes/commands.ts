@@ -6,6 +6,7 @@ import { CommandDedup } from "../models/CommandDedup.js";
 import { Job } from "../models/Job.js";
 import { User } from "../models/User.js";
 import { JobComment } from "../models/JobComment.js";
+import { User } from "../models/User.js";
 import { writeAudit } from "../services/auditHook.js";
 import { parseCommand } from "../services/commandParser.js";
 import mongoose, { Schema } from "mongoose";
