@@ -20,7 +20,6 @@ export interface IJobAudit {
   meta?: Record<string, unknown>;
   message?: string;
   createdAt: Date;
-  message?: string;
 }
 
 const JobAuditSchema = new Schema<IJobAudit>(
@@ -38,7 +37,6 @@ const JobAuditSchema = new Schema<IJobAudit>(
     toStage: { type: String },
     message: { type: String },
     meta: { type: Object },
-    message: { type: String },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
