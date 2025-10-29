@@ -18,6 +18,7 @@ export interface IJobAudit {
   fromStage?: string;
   toStage?: string;
   meta?: Record<string, unknown>;
+  message?: string;
   createdAt: Date;
 }
 
