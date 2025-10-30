@@ -3,7 +3,7 @@ import { z } from "zod";
 import mongoose from "mongoose";
 import { requireAuth, AuthedRequest } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
-import { Post, PollVote } from "../models/Post.js";
+import { Post, PollVote, PostLike } from "../models/Post.js";
 import { User } from "../models/User.js";
 import { Block } from "../models/Graph.js";
 import { canViewPost } from "../services/postAccess.js";
@@ -91,6 +91,7 @@ r.get("/:id", requireAuth(), async (req, res) => {
   const allowed = await canViewPost(post, ar.userId);
   if (!allowed) return res.status(403).json({ error: "forbidden" });
   const author = await User.findById(post.authorId);
+  const liked = await PostLike.exists({ postId: post._id, userId: ar.userId });
   res.json({
     id: String(post._id),
     author: author
@@ -110,6 +111,7 @@ r.get("/:id", requireAuth(), async (req, res) => {
     meta: post.meta ?? {},
     createdAt: post.createdAt,
     counts: post.counts,
+    likedByMe: Boolean(liked),
   });
 });
 
