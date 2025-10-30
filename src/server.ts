@@ -22,6 +22,7 @@ import engage from "./routes/engage.js";
 import feed from "./routes/feed.js";
 import graph from "./routes/graph.js";
 import pods from "./routes/pods.js";
+import files from "./routes/files.js";
 
 const helmet =
   typeof helmetModule === "function"
@@ -74,6 +75,7 @@ app.use("/api/engage", engage);
 app.use("/api/feed", feed);
 app.use("/api/graph", graph);
 app.use("/api/pods", pods);
+app.use("/api/files", files);
 
 app.use("/openai", openai);
 
