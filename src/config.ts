@@ -15,5 +15,8 @@ export const cfg = {
   allowedOrigins: process.env.ALLOWED_ORIGINS || "",
   allowedSignupEmails: process.env.ALLOWED_SIGNUP_EMAILS || "",
   openAiApiKey: process.env.OPENAI_API_KEY || "",
-  openAiModel: process.env.OPENAI_MODEL || "gpt-4o-mini"
+  openAiModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
+  cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID || "",
+  cloudflareImagesToken: process.env.CLOUDFLARE_IMAGES_TOKEN || "",
+  cloudflareImagesBaseUrl: process.env.CLOUDFLARE_IMAGES_BASE_URL || "",
 };

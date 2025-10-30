@@ -91,7 +91,51 @@ r.get("/:id", requireAuth(), async (req, res) => {
   const allowed = await canViewPost(post, ar.userId);
   if (!allowed) return res.status(403).json({ error: "forbidden" });
   const author = await User.findById(post.authorId);
-  const liked = await PostLike.exists({ postId: post._id, userId: ar.userId });
+  const [liked, myVote, voteCounts, participantCount] = await Promise.all([
+    PostLike.exists({ postId: post._id, userId: ar.userId }),
+    post.type === "poll"
+      ? PollVote.findOne({ postId: post._id, userId: ar.userId })
+      : Promise.resolve(null),
+    post.type === "poll"
+      ? PollVote.aggregate<{ _id: string; count: number }>([
+          { $match: { postId: post._id } },
+          { $unwind: "$optionIds" },
+          { $group: { _id: "$optionIds", count: { $sum: 1 } } },
+        ])
+      : Promise.resolve([] as { _id: string; count: number }[]),
+    post.type === "poll"
+      ? PollVote.countDocuments({ postId: post._id })
+      : Promise.resolve(0),
+  ]);
+
+  let pollDetails: null | {
+    question: string;
+    options: { id: string; label: string; votes: number }[];
+    multi: boolean;
+    expiresAt: Date | null;
+    myVotes: string[];
+    totalVotes: number;
+  } = null;
+
+  if (post.type === "poll" && post.poll) {
+    const countMap = new Map<string, number>();
+    for (const item of voteCounts) {
+      countMap.set(item._id, item.count);
+    }
+    pollDetails = {
+      question: post.poll.question,
+      options: post.poll.options.map((opt) => ({
+        id: opt.id,
+        label: opt.label,
+        votes: countMap.get(opt.id) ?? 0,
+      })),
+      multi: post.poll.multi,
+      expiresAt: post.poll.expiresAt ?? null,
+      myVotes: myVote?.optionIds ?? [],
+      totalVotes: participantCount,
+    };
+  }
+
   res.json({
     id: String(post._id),
     author: author
@@ -106,7 +150,7 @@ r.get("/:id", requireAuth(), async (req, res) => {
     tags: post.tags,
     visibility: post.visibility,
     media: post.media,
-    poll: post.poll,
+    poll: pollDetails,
     shareOf: post.shareOf ? String(post.shareOf) : null,
     meta: post.meta ?? {},
     createdAt: post.createdAt,
