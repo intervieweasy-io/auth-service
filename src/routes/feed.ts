@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireAuth, AuthedRequest } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { Follow, Block } from "../models/Graph.js";
-import { Post } from "../models/Post.js";
+import { Post, PostLike } from "../models/Post.js";
 import { Profile } from "../models/Profile.js";
 import { User } from "../models/User.js";
 import { computePostScore } from "../services/feedScore.js";
@@ -90,6 +90,14 @@ r.get(
     const authorIds = Array.from(new Set(page.map((item) => String(item.post.authorId))));
     const authors = await User.find({ _id: { $in: authorIds } }).lean();
     const authorMap = new Map(authors.map((u) => [String(u._id), u]));
+    const postIds = page.map(({ post }) => post._id);
+    const likes = await PostLike.find({
+      postId: { $in: postIds },
+      userId: ar.userId,
+    })
+      .select({ postId: 1 })
+      .lean();
+    const likedSet = new Set(likes.map((like) => String(like.postId)));
     const items = page.map(({ post, score }) => ({
       id: String(post._id),
       score,
@@ -103,6 +111,7 @@ r.get(
       visibility: post.visibility,
       media: post.media,
       counts: post.counts,
+      likedByMe: likedSet.has(String(post._id)),
       createdAt: post.createdAt,
     }));
     const last = page[page.length - 1]?.post;
@@ -168,6 +177,14 @@ r.get(
     const skills = viewerProfile?.skills ?? [];
     const proximityScore = isSelf ? 1 : viewerFollowsDoc ? 1 : 0;
     const authorInfo = { id: String(user._id), handle: user.handle, name: user.name };
+    const postIds = page.map((post) => post._id);
+    const likes = await PostLike.find({
+      postId: { $in: postIds },
+      userId: ar.userId,
+    })
+      .select({ postId: 1 })
+      .lean();
+    const likedSet = new Set(likes.map((like) => String(like.postId)));
     const items = page.map((post) => {
       const score = computePostScore(post, { viewerSkills: skills, proximity: proximityScore });
       return {
@@ -180,6 +197,7 @@ r.get(
         visibility: post.visibility,
         media: post.media,
         counts: post.counts,
+        likedByMe: likedSet.has(String(post._id)),
         createdAt: post.createdAt,
       };
     });
