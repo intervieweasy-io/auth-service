@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireAuth, AuthedRequest } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { Follow, Block } from "../models/Graph.js";
-import { Post, PostLike } from "../models/Post.js";
+import { Post, PostLike, PollVote } from "../models/Post.js";
 import { Profile } from "../models/Profile.js";
 import { User } from "../models/User.js";
 import { computePostScore } from "../services/feedScore.js";
@@ -98,6 +98,55 @@ r.get(
       .select({ postId: 1 })
       .lean();
     const likedSet = new Set(likes.map((like) => String(like.postId)));
+    const pollPosts = page.filter(({ post }) => post.type === "poll" && post.poll);
+    const pollPostIds = pollPosts.map(({ post }) => post._id);
+    let myPollVotes: { postId: mongoose.Types.ObjectId; optionIds: string[] }[] = [];
+    let pollVoteCounts: { _id: { postId: mongoose.Types.ObjectId; optionId: string }; count: number }[] = [];
+    let pollParticipantCounts: { _id: mongoose.Types.ObjectId; count: number }[] = [];
+
+    if (pollPostIds.length > 0) {
+      [myPollVotes, pollVoteCounts, pollParticipantCounts] = await Promise.all([
+        PollVote.find({ postId: { $in: pollPostIds }, userId: ar.userId }).lean(),
+        PollVote.aggregate<{
+          _id: { postId: mongoose.Types.ObjectId; optionId: string };
+          count: number;
+        }>([
+          { $match: { postId: { $in: pollPostIds } } },
+          { $unwind: "$optionIds" },
+          {
+            $group: {
+              _id: { postId: "$postId", optionId: "$optionIds" },
+              count: { $sum: 1 },
+            },
+          },
+        ]),
+        PollVote.aggregate<{ _id: mongoose.Types.ObjectId; count: number }>([
+          { $match: { postId: { $in: pollPostIds } } },
+          { $group: { _id: "$postId", count: { $sum: 1 } } },
+        ]),
+      ]);
+    }
+
+    const myPollVoteMap = new Map<string, string[]>();
+    for (const vote of myPollVotes) {
+      myPollVoteMap.set(String(vote.postId), vote.optionIds);
+    }
+
+    const pollVoteCountMap = new Map<string, Map<string, number>>();
+    for (const entry of pollVoteCounts) {
+      const postId = String(entry._id.postId);
+      const optionId = entry._id.optionId;
+      if (!pollVoteCountMap.has(postId)) {
+        pollVoteCountMap.set(postId, new Map());
+      }
+      pollVoteCountMap.get(postId)!.set(optionId, entry.count);
+    }
+
+    const pollParticipantCountMap = new Map<string, number>();
+    for (const entry of pollParticipantCounts) {
+      pollParticipantCountMap.set(String(entry._id), entry.count);
+    }
+
     const items = page.map(({ post, score }) => ({
       id: String(post._id),
       score,
@@ -110,6 +159,21 @@ r.get(
       tags: post.tags,
       visibility: post.visibility,
       media: post.media,
+      poll:
+        post.type === "poll" && post.poll
+          ? {
+              question: post.poll.question,
+              options: post.poll.options.map((opt) => ({
+                id: opt.id,
+                label: opt.label,
+                votes: pollVoteCountMap.get(String(post._id))?.get(opt.id) ?? 0,
+              })),
+              multi: post.poll.multi,
+              expiresAt: post.poll.expiresAt ?? null,
+              myVotes: myPollVoteMap.get(String(post._id)) ?? [],
+              totalVotes: pollParticipantCountMap.get(String(post._id)) ?? 0,
+            }
+          : null,
       counts: post.counts,
       likedByMe: likedSet.has(String(post._id)),
       createdAt: post.createdAt,
